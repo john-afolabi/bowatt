@@ -27,6 +27,10 @@ type Config struct {
 	IdleTimeout     time.Duration
 }
 
+func (c Config) UploadsDir() string {
+	return filepath.Join(c.DataDir, "uploads")
+}
+
 func Load() (Config, error) {
 	logFormat, err := parseLogFormat(env("LOG_FORMAT", string(LogFormatText)))
 	if err != nil {

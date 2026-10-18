@@ -36,6 +36,10 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	if err := os.MkdirAll(cfg.UploadsDir(), 0o750); err != nil {
+		return fmt.Errorf("create uploads directory %q: %w", cfg.UploadsDir(), err)
+	}
+
 	st, err := store.Open(ctx, cfg.DBPath)
 	if err != nil {
 		return fmt.Errorf("open store: %w", err)

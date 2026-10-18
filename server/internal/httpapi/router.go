@@ -28,6 +28,8 @@ func (s *Server) Handler() http.Handler {
 
 	mux.HandleFunc("GET /healthz", s.handleHealth)
 	mux.HandleFunc("GET /api/images", s.handleListImages)
+	mux.HandleFunc("POST /uploads", s.handleCreateUpload)
+	mux.HandleFunc("GET /uploads/{key}", s.handleServeUpload)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		s.writeError(w, r, notFound("not_found", "no route matches %s %s", r.Method, r.URL.Path))
