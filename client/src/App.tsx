@@ -5,9 +5,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFeed } from "@/hooks/useFeed";
 import { useCallback, useState } from "react";
 import { TagFilter } from "./components/tag-filter";
+import { Upload } from "lucide-react";
+import { UploadDialog } from "./components/upload-dialog";
 
 export function App() {
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const feed = useFeed(activeTags);
 
   const toggleTag = useCallback((tag: string) => {
@@ -22,6 +25,10 @@ export function App() {
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6">
           <span className="mr-auto text-lg font-semibold tracking-tight">Bowatt</span>
+          <Button onClick={() => setUploadOpen(true)}>
+            <Upload aria-hidden />
+            Upload
+          </Button>
         </div>
       </header>
 
@@ -80,6 +87,12 @@ export function App() {
           </div>
         )}
       </main>
+
+      <UploadDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onUploaded={() => console.log("uploaded")}
+      />
     </div>
   );
 }
