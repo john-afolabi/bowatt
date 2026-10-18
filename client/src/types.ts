@@ -15,3 +15,5 @@ export type ImagePage = {
 };
 
 export type ServerEvent = { type: "image.created"; data: FeedImage };
+
+export type ConnectionStatus = "connecting" | "live" | "offline";

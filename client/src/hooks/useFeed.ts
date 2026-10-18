@@ -1,9 +1,10 @@
 import { useMemo } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
-import { describeError, listImages } from "@/lib/api";
-import type { FeedImage } from "@/types";
-import { uniqueTags } from "@/lib/feed";
+import { describeError, listImages, websocketUrl } from "@/lib/api";
+import type { ConnectionStatus, FeedImage } from "@/types";
+import { insertLive, parseServerEvent, uniqueTags } from "@/lib/feed";
+import { useWebSocket } from "./useWebsocket";
 
 export const PAGE_SIZE = 24;
 
@@ -17,12 +18,14 @@ export type Feed = {
   moreError?: string;
   loadingMore: boolean;
   hasMore: boolean;
+  connection: ConnectionStatus;
   loadMore: () => void;
   reload: () => void;
 };
 
 export function useFeed(activeTags: string[] = []): Feed {
   const tagsKey = [...activeTags].sort();
+  const queryClient = useQueryClient();
 
   const query = useInfiniteQuery({
     queryKey: ["images", tagsKey],
@@ -32,6 +35,22 @@ export function useFeed(activeTags: string[] = []): Feed {
     getNextPageParam: (last) => last.nextCursor,
   });
 
+  const handleMessage = (payload: unknown) => {
+    const event = parseServerEvent(payload);
+    if (event) insertLive(queryClient, event.data);
+  };
+
+  const handleReconnect = () => {
+    void queryClient.invalidateQueries({ queryKey: ["images"] });
+  };
+
+
+  const connection = useWebSocket({
+    url: websocketUrl(),
+    onMessage: handleMessage,
+    onReconnect: handleReconnect,
+  });
+  
   const images = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
   const tags = useMemo(() => uniqueTags(images), [images]);
 
@@ -46,6 +65,7 @@ export function useFeed(activeTags: string[] = []): Feed {
         : undefined,
     loadingMore: query.isFetchingNextPage,
     hasMore: query.hasNextPage,
+    connection,
     loadMore: () => void query.fetchNextPage({ cancelRefetch: false }),
     reload: () => void query.refetch(),
   };
