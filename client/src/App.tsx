@@ -7,11 +7,13 @@ import { useCallback, useState } from "react";
 import { TagFilter } from "./components/tag-filter";
 import { Upload } from "lucide-react";
 import { UploadDialog } from "./components/upload-dialog";
+import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
 
 export function App() {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const feed = useFeed(activeTags);
+  const sentinelRef = useInfiniteScroll(feed.loadMore, feed.status === "ready" && feed.hasMore);
 
   const toggleTag = useCallback((tag: string) => {
     setActiveTags((current) =>
@@ -75,16 +77,37 @@ export function App() {
         )}
 
         {feed.status === "ready" && feed.images.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {feed.images.map((image) => (
-              <ImageCard
-                key={image.id}
-                image={image}
-                activeTags={activeTags}
-                onToggleTag={toggleTag}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {feed.images.map((image) => (
+                <ImageCard
+                  key={image.id}
+                  image={image}
+                  activeTags={activeTags}
+                  onToggleTag={toggleTag}
+                />
+              ))}
+            </div>
+
+            <div ref={sentinelRef} aria-hidden className="h-px" />
+
+            {feed.loadingMore && <FeedSkeleton count={4} />}
+
+            {feed.moreError && (
+              <div className="flex flex-col items-center gap-2 py-4">
+                <p className="text-sm text-destructive">{feed.moreError}</p>
+                <Button variant="outline" size="sm" onClick={feed.loadMore}>
+                  Load more
+                </Button>
+              </div>
+            )}
+
+            {!feed.hasMore && !feed.loadingMore && (
+              <p className="py-4 text-center text-xs text-muted-foreground">
+                That is everything so far.
+              </p>
+            )}
+          </>
         )}
       </main>
 
