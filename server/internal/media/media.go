@@ -8,6 +8,10 @@ import (
 	"slices"
 	"strings"
 	"unicode/utf8"
+
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 )
 
 const (
