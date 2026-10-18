@@ -97,6 +97,8 @@ func (s *Server) handleCreateUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.broadcastImage(image)
+
 	w.Header().Set("Location", image.URL)
 	s.writeJSON(w, http.StatusCreated, image)
 }

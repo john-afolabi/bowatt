@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"bowatt/internal/config"
+	"bowatt/internal/hub"
 	"bowatt/internal/store"
 )
 
@@ -14,13 +15,14 @@ type Server struct {
 	cfg   config.Config
 	log   *slog.Logger
 	store *store.SQLite
+	hub   *hub.Hub
 }
 
-func New(cfg config.Config, log *slog.Logger, st *store.SQLite) *Server {
+func New(cfg config.Config, log *slog.Logger, st *store.SQLite, hub *hub.Hub) *Server {
 	if log == nil {
 		log = slog.Default()
 	}
-	return &Server{cfg: cfg, log: log, store: st}
+	return &Server{cfg: cfg, log: log, store: st, hub: hub}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -30,6 +32,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/images", s.handleListImages)
 	mux.HandleFunc("POST /uploads", s.handleCreateUpload)
 	mux.HandleFunc("GET /uploads/{key}", s.handleServeUpload)
+	mux.HandleFunc("GET /api/ws", s.handleWebSocket)
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		s.writeError(w, r, notFound("not_found", "no route matches %s %s", r.Method, r.URL.Path))

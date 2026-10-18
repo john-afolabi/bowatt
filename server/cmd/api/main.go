@@ -13,6 +13,7 @@ import (
 
 	"bowatt/internal/config"
 	"bowatt/internal/httpapi"
+	"bowatt/internal/hub"
 	"bowatt/internal/logging"
 	"bowatt/internal/store"
 )
@@ -45,7 +46,10 @@ func run() error {
 		return fmt.Errorf("open store: %w", err)
 	}
 
-	api := httpapi.New(cfg, logger, st)
+	manager := hub.New(logger)
+	go manager.Run()
+
+	api := httpapi.New(cfg, logger, st, manager)
 
 	server := &http.Server{
 		Addr:              cfg.ListenAddr,
@@ -71,6 +75,8 @@ func run() error {
 
 	select {
 	case err := <-serveErr:
+		manager.Shutdown()
+		manager.Wait()
 		if err != nil {
 			return fmt.Errorf("http server: %w", err)
 		}
@@ -78,6 +84,9 @@ func run() error {
 	case <-ctx.Done():
 		logger.Info("shutdown signal received")
 	}
+
+	// Close sockets before shutting the HTTP server down
+	manager.Shutdown()
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
 	defer cancel()
@@ -87,6 +96,7 @@ func run() error {
 		return fmt.Errorf("graceful shutdown: %w", err)
 	}
 
+	manager.Wait()
 	logger.Info("stopped")
 	return nil
 }
