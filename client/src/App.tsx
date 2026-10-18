@@ -8,10 +8,13 @@ import { TagFilter } from "./components/tag-filter";
 import { Upload } from "lucide-react";
 import { UploadDialog } from "./components/upload-dialog";
 import { useInfiniteScroll } from "./hooks/useInfiniteScroll";
+import { Dialog, DialogContent, DialogTitle } from "./components/ui/dialog";
+import type { FeedImage } from "./types";
 
 export function App() {
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [preview, setPreview] = useState<FeedImage | null>(null);
   const feed = useFeed(activeTags);
   const sentinelRef = useInfiniteScroll(feed.loadMore, feed.status === "ready" && feed.hasMore);
 
@@ -85,6 +88,7 @@ export function App() {
                   image={image}
                   activeTags={activeTags}
                   onToggleTag={toggleTag}
+                  onOpen={setPreview}
                 />
               ))}
             </div>
@@ -112,6 +116,23 @@ export function App() {
       </main>
 
       <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} onUploaded={feed.insertLive} />
+
+      <Dialog open={preview !== null} onOpenChange={(open) => !open && setPreview(null)}>
+        <DialogContent
+          showCloseButton={false}
+          aria-describedby={undefined}
+          className="max-w-[min(92vw,64rem)] border-0 bg-transparent p-0 shadow-none"
+        >
+          <DialogTitle className="sr-only">{preview?.title}</DialogTitle>
+          {preview && (
+            <img
+              src={preview.url}
+              alt={preview.title}
+              className="max-h-[85dvh] w-full rounded-xl object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

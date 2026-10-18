@@ -24,6 +24,7 @@ import {
   type UploadErrors,
 } from "@/lib/validation";
 import type { FeedImage } from "@/types";
+import { formatBytes } from "@/lib/format";
 
 type Props = {
   open: boolean;
@@ -148,6 +149,9 @@ export function UploadDialog({ open, onOpenChange, onUploaded }: Props) {
 
             {file && (
               <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                <span className="truncate">
+                  {file.name} · {formatBytes(file.size)}
+                </span>
                 <Button
                   type="button"
                   variant="ghost"
