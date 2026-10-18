@@ -7,6 +7,7 @@ const URLPathPrefix = "/uploads/"
 type Image struct {
 	ID          string    `json:"id"`
 	Title       string    `json:"title"`
+	Tags        []string  `json:"tags"`
 	URL         string    `json:"url"`
 	Width       int       `json:"width"`
 	Height      int       `json:"height"`
@@ -20,9 +21,21 @@ type NewImage struct {
 	ID          string
 	StorageKey  string
 	Title       string
+	Tags        []string
 	ContentType string
 	Width       int
 	Height      int
 	SizeBytes   int64
 	CreatedAt   time.Time
+}
+
+type ListQuery struct {
+	Limit  int
+	Cursor string
+	Tags   []string
+}
+
+type Page struct {
+	Items      []Image `json:"items"`
+	NextCursor string  `json:"nextCursor,omitempty"`
 }

@@ -36,7 +36,7 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	st, err := store.Open(ctx, cfg.DataDir)
+	st, err := store.Open(ctx, cfg.DBPath)
 	if err != nil {
 		return fmt.Errorf("open store: %w", err)
 	}
@@ -56,7 +56,7 @@ func run() error {
 	go func() {
 		logger.Info("listening",
 			slog.String("addr", cfg.ListenAddr),
-			slog.String("data_dir", cfg.DataDir),
+			slog.String("db", cfg.DBPath),
 		)
 		err := server.ListenAndServe()
 		if errors.Is(err, http.ErrServerClosed) {
