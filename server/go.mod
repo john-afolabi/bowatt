@@ -2,7 +2,10 @@ module bowatt
 
 go 1.27
 
-require modernc.org/sqlite v1.60.1
+require (
+	github.com/oklog/ulid/v2 v2.1.2
+	modernc.org/sqlite v1.60.1
+)
 
 require (
 	github.com/dustin/go-humanize v1.0.1 // indirect

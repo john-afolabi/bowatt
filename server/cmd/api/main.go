@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"bowatt/internal/config"
+	"bowatt/internal/httpapi"
 	"bowatt/internal/logging"
+	"bowatt/internal/store"
 )
 
 func main() {
@@ -34,12 +36,16 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /healthz", handleHealth)
+	st, err := store.Open(ctx, cfg.DataDir)
+	if err != nil {
+		return fmt.Errorf("open store: %w", err)
+	}
+
+	api := httpapi.New(cfg, logger, st)
 
 	server := &http.Server{
 		Addr:              cfg.ListenAddr,
-		Handler:           withAccessLog(logger, mux),
+		Handler:           api.Handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       cfg.ReadTimeout,
 		IdleTimeout:       cfg.IdleTimeout,
