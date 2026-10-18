@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 import { describeError, listImages, websocketUrl } from "@/lib/api";
@@ -21,6 +21,7 @@ export type Feed = {
   connection: ConnectionStatus;
   loadMore: () => void;
   reload: () => void;
+  insertLive: (image: FeedImage) => void;
 };
 
 export function useFeed(activeTags: string[] = []): Feed {
@@ -44,15 +45,17 @@ export function useFeed(activeTags: string[] = []): Feed {
     void queryClient.invalidateQueries({ queryKey: ["images"] });
   };
 
-
   const connection = useWebSocket({
     url: websocketUrl(),
     onMessage: handleMessage,
     onReconnect: handleReconnect,
   });
-  
+
   const images = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
-  const tags = useMemo(() => uniqueTags(images), [images]);
+  const [tags, setTags] = useState<string[]>([]);
+  useEffect(() => {
+    setTags((current) => [...new Set([...current, ...uniqueTags(images)])].sort());
+  }, [images]);
 
   return {
     images,
@@ -68,5 +71,6 @@ export function useFeed(activeTags: string[] = []): Feed {
     connection,
     loadMore: () => void query.fetchNextPage({ cancelRefetch: false }),
     reload: () => void query.refetch(),
+    insertLive: (image: FeedImage) => insertLive(queryClient, image),
   };
 }

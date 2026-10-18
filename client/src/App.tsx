@@ -111,11 +111,7 @@ export function App() {
         )}
       </main>
 
-      <UploadDialog
-        open={uploadOpen}
-        onOpenChange={setUploadOpen}
-        onUploaded={() => console.log("uploaded")}
-      />
+      <UploadDialog open={uploadOpen} onOpenChange={setUploadOpen} onUploaded={feed.insertLive} />
     </div>
   );
 }
