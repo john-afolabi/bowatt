@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -18,6 +19,7 @@ const (
 type Config struct {
 	ListenAddr      string
 	DataDir         string
+	DBPath          string
 	LogLevel        slog.Level
 	LogFormat       LogFormat
 	ShutdownTimeout time.Duration
@@ -40,6 +42,8 @@ func Load() (Config, error) {
 		ReadTimeout:     60 * time.Second,
 		IdleTimeout:     120 * time.Second,
 	}
+
+	cfg.DBPath = env("DB_PATH", filepath.Join(cfg.DataDir, "app.db"))
 
 	if cfg.ListenAddr == "" {
 		return Config{}, fmt.Errorf("LISTEN_ADDR must not be empty")
