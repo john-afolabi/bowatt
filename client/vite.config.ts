@@ -1,31 +1,39 @@
+import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig, lazyPlugins } from "vite-plus";
+import { defineConfig } from "vite-plus";
 
-// https://vite.dev/config/
+const API_TARGET = process.env.API_PROXY_TARGET ?? "http://localhost:8080";
+
 export default defineConfig({
-  fmt: {},
-  lint: {
-    plugins: ["react", "typescript", "oxc"],
-    rules: {
-      "react/rules-of-hooks": "error",
-      "react/only-export-components": [
-        "warn",
-        {
-          allowConstantExport: true,
-        },
-      ],
-      "vite-plus/prefer-vite-plus-imports": "error",
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      "/api": { target: API_TARGET, changeOrigin: false, ws: true },
+      "/uploads": { target: API_TARGET, changeOrigin: false },
+      "/healthz": { target: API_TARGET, changeOrigin: false },
+    },
+  },
+  test: {
+    include: ["src/**/*.test.{ts,tsx}"],
+    environment: "happy-dom",
+    restoreMocks: true,
+  },
+  lint: {
+    ignorePatterns: ["dist/**", "node_modules/**", "src/components/ui/**"],
     options: {
+      // Turning this off would silently stop `vp check` type checking anything.
       typeAware: true,
       typeCheck: true,
     },
-    jsPlugins: [
-      {
-        name: "vite-plus",
-        specifier: "vite-plus/oxlint-plugin",
-      },
-    ],
   },
-  plugins: lazyPlugins(() => [react()]),
+  fmt: {
+    ignorePatterns: ["dist/**", "node_modules/**", "src/components/ui/**"],
+  },
 });
